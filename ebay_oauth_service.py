@@ -62,7 +62,8 @@ class EbayOAuthService:
         # Try environment variables first
         self.client_id = os.getenv('EBAY_CLIENT_ID') or os.getenv('EBAY_APP_ID')
         self.client_secret = os.getenv('EBAY_CLIENT_SECRET') or os.getenv('EBAY_CERT_ID')
-        self.redirect_uri = os.getenv('EBAY_REDIRECT_URI') or os.getenv('EBAY_RUNAME')
+        # For eBay OAuth, redirect_uri should be the RuName, not the URL
+        self.redirect_uri = os.getenv('EBAY_RUNAME') or os.getenv('EBAY_REDIRECT_URI')
         
         # If not found, try config files
         if not self.client_id:
