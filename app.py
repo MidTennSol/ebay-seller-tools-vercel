@@ -994,9 +994,25 @@ def ebay_callback():
         # Exchange code for tokens
         token_data = oauth_service.exchange_code_for_user_token(code)
         
+        if not token_data:
+            logger.error("Failed to exchange authorization code for tokens")
+            return jsonify({'error': 'Failed to exchange authorization code for access token'}), 500
+        
+        logger.info(f"Successfully received token data: {list(token_data.keys()) if token_data else 'None'}")
+        
         # Get seller information
-        access_token = token_data['access_token']
+        access_token = token_data.get('access_token')
+        if not access_token:
+            logger.error("No access token in response")
+            return jsonify({'error': 'No access token received from eBay'}), 500
+            
         seller_info = oauth_service.get_seller_info(access_token)
+        
+        if not seller_info:
+            logger.error("Failed to get seller information")
+            return jsonify({'error': 'Failed to retrieve seller information'}), 500
+        
+        logger.info(f"Successfully retrieved seller info for: {seller_info.get('sellerId', 'unknown')}")
         
         # Store tokens and seller info in database
         if oauth_service.store_tokens(token_data, seller_info):
