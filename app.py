@@ -953,7 +953,8 @@ def ebay_login():
         if oauth_service is None:
             return jsonify({'error': 'eBay OAuth service not available. Please check your API credentials.'}), 500
         
-        auth_url, state = oauth_service.generate_auth_url()
+        auth_url = oauth_service.generate_user_authorization_url()
+        state = "csrf_protection_token"  # In production, generate a random state token
         
         # Store state in session for CSRF protection (in production, use proper session management)
         # For now, we'll return both URL and state to the frontend
@@ -991,7 +992,7 @@ def ebay_callback():
         logger.info(f"Received eBay callback with code: {code[:10]}... and state: {state}")
         
         # Exchange code for tokens
-        token_data = oauth_service.exchange_code_for_token(code)
+        token_data = oauth_service.exchange_code_for_user_token(code)
         
         # Get seller information
         access_token = token_data['access_token']
