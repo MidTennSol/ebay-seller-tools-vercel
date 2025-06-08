@@ -10,7 +10,6 @@ import csv
 import logging
 import re
 from decimal import Decimal, InvalidOperation
-from ebay_oauth import oauth_service
 from urllib.parse import parse_qs, urlparse
 import requests
 from sqlalchemy import func, desc
