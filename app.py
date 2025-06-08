@@ -2275,6 +2275,63 @@ def manage_inventory_movements():
         }), 500
 
 # ========================================
+# Privacy Policy and Terms Routes
+# ========================================
+
+@app.route('/privacy', methods=['GET'])
+def privacy_policy():
+    """Privacy policy page for eBay OAuth compliance"""
+    privacy_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Privacy Policy - eBay Seller Tools</title>
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+            h1 { color: #2c3e50; }
+            h2 { color: #34495e; margin-top: 30px; }
+            p { line-height: 1.6; margin-bottom: 15px; }
+        </style>
+    </head>
+    <body>
+        <h1>Privacy Policy</h1>
+        <p><strong>Effective Date:</strong> December 2024</p>
+        
+        <h2>Information We Collect</h2>
+        <p>Our eBay Seller Tools application collects and processes the following information:</p>
+        <ul>
+            <li>eBay account information and order data through authorized API access</li>
+            <li>Sales records and transaction data from your eBay store</li>
+            <li>Inventory and cost data you provide for profit calculations</li>
+        </ul>
+        
+        <h2>How We Use Your Information</h2>
+        <p>We use your information solely for:</p>
+        <ul>
+            <li>Providing order management and profit analysis tools</li>
+            <li>Synchronizing your eBay sales data</li>
+            <li>Calculating profit margins and business metrics</li>
+        </ul>
+        
+        <h2>Data Security</h2>
+        <p>We implement appropriate security measures to protect your data. Your eBay authentication tokens are securely stored and used only for authorized API access.</p>
+        
+        <h2>Data Sharing</h2>
+        <p>We do not sell, trade, or share your personal information with third parties except as required by law.</p>
+        
+        <h2>Your Rights</h2>
+        <p>You may revoke access to your eBay data at any time through your eBay account settings or by contacting us.</p>
+        
+        <h2>Contact Us</h2>
+        <p>For questions about this privacy policy, please contact us through GitHub.</p>
+        
+        <p><em>This application is designed for seller productivity and operates in compliance with eBay's API policies.</em></p>
+    </body>
+    </html>
+    """
+    return privacy_html
+
+# ========================================
 # Existing Routes
 # ========================================
 
