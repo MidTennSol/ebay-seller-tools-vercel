@@ -10,7 +10,6 @@ import csv
 import logging
 import re
 from decimal import Decimal, InvalidOperation
-from ebay_oauth import oauth_service
 from urllib.parse import parse_qs, urlparse
 import requests
 from sqlalchemy import func, desc
@@ -55,6 +54,17 @@ except Exception as e:
     print(f"⚠️  Warning: Could not import eBay Inventory Service: {e}")
     logger.error(f"eBay Inventory Service import error: {e}")
     ebay_inventory_service = None
+
+# Initialize eBay OAuth service
+try:
+    from ebay_oauth_service import EbayOAuthService
+    oauth_service = EbayOAuthService(environment="sandbox")
+    print("✅ eBay OAuth Service imported successfully")
+    logger.info("eBay OAuth service available")
+except Exception as e:
+    print(f"⚠️  Warning: Could not import eBay OAuth Service: {e}")
+    logger.error(f"eBay OAuth Service import error: {e}")
+    oauth_service = None
 
 def validate_numeric_input(value, field_name, min_value=None, max_value=None):
     """Validate numeric input with detailed error messages"""
