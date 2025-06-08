@@ -599,10 +599,10 @@ class EbayOAuthService:
             token = EBayToken(
                 seller_id=seller_info['sellerId'],
                 access_token=token_data['access_token'],
-                refresh_token=token_data.get('refresh_token', ''),
+                refresh_token=token_data.get('refresh_token') or None,  # Convert empty string to None
                 token_expires_at=expires_at,
                 refresh_expires_at=refresh_expires_at,
-                scope=token_data.get('scope', ''),
+                scope=token_data.get('scope') or None,  # Convert empty string to None
                 token_type='user',
                 is_active=True,
                 created_at=datetime.utcnow()
@@ -620,6 +620,11 @@ class EbayOAuthService:
             
         except Exception as e:
             logger.error(f"Error storing tokens: {e}")
+            logger.error(f"Error type: {type(e).__name__}")
+            logger.error(f"Token data keys: {list(token_data.keys()) if token_data else 'None'}")
+            logger.error(f"Seller info: {seller_info}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
             try:
                 session.rollback()
                 session.close()

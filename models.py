@@ -122,11 +122,13 @@ class EBayToken(Base):
     __tablename__ = 'ebay_tokens'
     
     id = Column(Integer, primary_key=True)
-    seller_id = Column(String(100), unique=True, nullable=False)  # eBay seller ID
+    seller_id = Column(String(100), nullable=False)              # eBay seller ID (removed unique=True to allow multiple tokens)
     access_token = Column(Text, nullable=False)                   # OAuth access token
-    refresh_token = Column(Text, nullable=False)                  # OAuth refresh token
+    refresh_token = Column(Text, nullable=True)                   # OAuth refresh token (can be null)
     token_expires_at = Column(DateTime, nullable=False)           # Token expiration
-    scope = Column(Text, nullable=False)                          # OAuth scopes
+    refresh_expires_at = Column(DateTime, nullable=True)          # Refresh token expiration
+    scope = Column(Text, nullable=True)                           # OAuth scopes (can be null)
+    token_type = Column(String(20), default='user')               # Token type (user/app)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     is_active = Column(Boolean, default=True)
@@ -197,6 +199,36 @@ db_config = DatabaseConfig()
 def init_database():
     """Initialize the database with tables"""
     db_config.create_tables()
+    
+    # Handle database migrations for existing databases
+    try:
+        # Check if we need to add missing columns to EBayToken table
+        import sqlite3
+        conn = sqlite3.connect(db_config.db_path)
+        cursor = conn.cursor()
+        
+        # Check if refresh_expires_at column exists
+        cursor.execute("PRAGMA table_info(ebay_tokens)")
+        columns = [row[1] for row in cursor.fetchall()]
+        
+        if 'refresh_expires_at' not in columns:
+            print("Adding refresh_expires_at column to ebay_tokens table...")
+            cursor.execute("ALTER TABLE ebay_tokens ADD COLUMN refresh_expires_at DATETIME")
+            
+        if 'token_type' not in columns:
+            print("Adding token_type column to ebay_tokens table...")
+            cursor.execute("ALTER TABLE ebay_tokens ADD COLUMN token_type VARCHAR(20) DEFAULT 'user'")
+        
+        # Make refresh_token nullable if it isn't already
+        # SQLite doesn't support ALTER COLUMN, so we'll handle null values in the application
+        
+        conn.commit()
+        conn.close()
+        print("Database migration completed successfully")
+        
+    except Exception as e:
+        print(f"Database migration warning (non-critical): {e}")
+    
     return db_config
 
 def get_db_session():
