@@ -1,0 +1,6 @@
+Flask==2.3.3
+flask-cors==4.0.0
+pandas==2.0.3
+python-dotenv==1.0.0
+SQLAlchemy==2.0.21
+requests==2.31.0
