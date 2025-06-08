@@ -2275,8 +2275,98 @@ def manage_inventory_movements():
         }), 500
 
 # ========================================
-# Privacy Policy and Terms Routes
+# Home Page and Privacy Policy Routes
 # ========================================
+
+@app.route('/', methods=['GET'])
+def home():
+    """Home page for eBay Seller Tools"""
+    home_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>eBay Seller Tools</title>
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                max-width: 1200px; 
+                margin: 0 auto; 
+                padding: 20px; 
+                background-color: #f8f9fa;
+            }
+            .header { 
+                text-align: center; 
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white; 
+                padding: 40px; 
+                border-radius: 10px; 
+                margin-bottom: 30px;
+            }
+            .header h1 { margin: 0; font-size: 2.5em; }
+            .header p { margin: 10px 0 0 0; font-size: 1.2em; opacity: 0.9; }
+            .features { 
+                display: grid; 
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+                gap: 20px; 
+                margin-bottom: 30px;
+            }
+            .feature { 
+                background: white; 
+                padding: 25px; 
+                border-radius: 8px; 
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            .feature h3 { color: #2c3e50; margin-top: 0; }
+            .status { 
+                text-align: center; 
+                background: white; 
+                padding: 20px; 
+                border-radius: 8px; 
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            .btn { 
+                display: inline-block; 
+                background: #667eea; 
+                color: white; 
+                padding: 12px 24px; 
+                text-decoration: none; 
+                border-radius: 5px; 
+                margin: 10px;
+            }
+            .btn:hover { background: #5a6fd8; }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🚀 eBay Seller Tools</h1>
+            <p>Professional inventory management and profit tracking for eBay sellers</p>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>📊 Order Management</h3>
+                <p>Upload and manage your CSV order files with automatic profit calculations and inventory tracking.</p>
+            </div>
+            <div class="feature">
+                <h3>🔗 eBay Integration</h3>
+                <p>Connect directly to eBay's API for real-time inventory synchronization and order data.</p>
+            </div>
+            <div class="feature">
+                <h3>💰 Profit Analytics</h3>
+                <p>Track your profit margins, inventory costs, and business performance with detailed reports.</p>
+            </div>
+        </div>
+        
+        <div class="status">
+            <h3>🔧 System Status</h3>
+            <p>Application is running and ready to use!</p>
+            <a href="/api/health" class="btn">Check API Status</a>
+            <a href="/api/auth/ebay/login" class="btn">Connect eBay Account</a>
+        </div>
+    </body>
+    </html>
+    """
+    return home_html
 
 @app.route('/privacy', methods=['GET'])
 def privacy_policy():
