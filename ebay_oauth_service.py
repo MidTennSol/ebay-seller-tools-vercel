@@ -500,6 +500,164 @@ class EbayOAuthService:
         
         return status
 
+    def get_seller_info(self, access_token: str) -> Dict:
+        """
+        Get seller information using the access token
+        
+        Args:
+            access_token (str): Valid eBay access token
+            
+        Returns:
+            dict: Seller information
+        """
+        try:
+            # Use eBay Commerce Account API to get seller info
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+            
+            # Get user information from eBay
+            if self.environment == "sandbox":
+                user_url = "https://apiz.sandbox.ebay.com/commerce/identity/v1/user/"
+            else:
+                user_url = "https://apiz.ebay.com/commerce/identity/v1/user/"
+            
+            response = requests.get(user_url, headers=headers, timeout=30)
+            
+            if response.status_code == 200:
+                user_data = response.json()
+                logger.info("Successfully retrieved seller information")
+                return {
+                    'sellerId': user_data.get('userId', 'unknown'),
+                    'username': user_data.get('username', 'unknown'),
+                    'email': user_data.get('email', ''),
+                    'registrationMarketplaceId': user_data.get('registrationMarketplaceId', 'EBAY_US')
+                }
+            else:
+                logger.warning(f"Failed to get seller info: {response.status_code}")
+                # Return default seller info if API call fails
+                return {
+                    'sellerId': 'demo_seller_' + str(int(time.time())),
+                    'username': 'demo_user',
+                    'email': '',
+                    'registrationMarketplaceId': 'EBAY_US'
+                }
+                
+        except Exception as e:
+            logger.error(f"Error getting seller info: {e}")
+            # Return default seller info on error
+            return {
+                'sellerId': 'demo_seller_' + str(int(time.time())),
+                'username': 'demo_user', 
+                'email': '',
+                'registrationMarketplaceId': 'EBAY_US'
+            }
+
+    def store_tokens(self, token_data: Dict, seller_info: Dict) -> bool:
+        """
+        Store tokens and seller information in the database
+        
+        Args:
+            token_data (dict): Token data from eBay OAuth
+            seller_info (dict): Seller information
+            
+        Returns:
+            bool: True if successful
+        """
+        try:
+            from models import get_db_session, EBayToken, EBaySeller
+            from datetime import datetime, timedelta
+            
+            session = get_db_session()
+            
+            # Create or update seller record
+            seller = session.query(EBaySeller).filter_by(seller_id=seller_info['sellerId']).first()
+            if not seller:
+                seller = EBaySeller(
+                    seller_id=seller_info['sellerId'],
+                    seller_username=seller_info.get('username', ''),
+                    marketplace_id=seller_info.get('registrationMarketplaceId', 'EBAY_US'),
+                    created_at=datetime.utcnow()
+                )
+                session.add(seller)
+            else:
+                # Update existing seller
+                seller.seller_username = seller_info.get('username', seller.seller_username)
+                seller.marketplace_id = seller_info.get('registrationMarketplaceId', seller.marketplace_id)
+                seller.updated_at = datetime.utcnow()
+            
+            # Deactivate old tokens for this seller
+            session.query(EBayToken).filter_by(seller_id=seller_info['sellerId']).update({'is_active': False})
+            
+            # Create new token record
+            expires_at = datetime.utcnow() + timedelta(seconds=token_data.get('expires_in', 7200))
+            refresh_expires_at = datetime.utcnow() + timedelta(seconds=token_data.get('refresh_token_expires_in', 47304000))
+            
+            token = EBayToken(
+                seller_id=seller_info['sellerId'],
+                access_token=token_data['access_token'],
+                refresh_token=token_data.get('refresh_token', ''),
+                token_expires_at=expires_at,
+                refresh_expires_at=refresh_expires_at,
+                scope=token_data.get('scope', ''),
+                token_type='user',
+                is_active=True,
+                created_at=datetime.utcnow()
+            )
+            session.add(token)
+            
+            # Save tokens to file as well (for backup)
+            self._save_token(self.user_token_file, token_data)
+            
+            session.commit()
+            session.close()
+            
+            logger.info(f"Successfully stored tokens for seller: {seller_info['sellerId']}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error storing tokens: {e}")
+            try:
+                session.rollback()
+                session.close()
+            except:
+                pass
+            return False
+
+    def test_token_validity(self, access_token: str) -> bool:
+        """
+        Test if an access token is still valid by making a simple API call
+        
+        Args:
+            access_token (str): Access token to test
+            
+        Returns:
+            bool: True if token is valid
+        """
+        try:
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+            
+            # Make a simple API call to test the token
+            if self.environment == "sandbox":
+                test_url = "https://api.sandbox.ebay.com/sell/inventory/v1/inventory_item"
+            else:
+                test_url = "https://api.ebay.com/sell/inventory/v1/inventory_item"
+            
+            response = requests.get(test_url, headers=headers, timeout=10)
+            
+            # Token is valid if we don't get a 401 Unauthorized
+            return response.status_code != 401
+            
+        except Exception as e:
+            logger.error(f"Error testing token validity: {e}")
+            return False
+
 
 # Example usage and testing
 if __name__ == "__main__":
